@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { TraceContext } from './TraceContext.js'
 import { SpanLifecycle } from './SpanLifecycle.js'
+import { TokenCounter } from '../cost/TokenCounter.js'
 
 describe('SpanLifecycle', () => {
   describe('setMetadata()', () => {
@@ -69,6 +70,22 @@ describe('SpanLifecycle', () => {
       const span = TraceContext.startSpan(trace, { name: 'llm-call' })
       SpanLifecycle.recordTokenUsage(span, { promptTokens: 100, completionTokens: 50, model: 'gpt-4o' })
       expect(span.metadata['model']).toBe('gpt-4o')
+    })
+
+    it('feeds a provided TokenCounter when model is present', () => {
+      const trace = TraceContext.createTrace('goal')
+      const span = TraceContext.startSpan(trace, { name: 'llm-call' })
+      const counter = new TokenCounter()
+      SpanLifecycle.recordTokenUsage(span, { promptTokens: 300, completionTokens: 100, model: 'claude-sonnet-4-6' }, counter)
+      expect(counter.totalsFor('claude-sonnet-4-6').totalTokens).toBe(400)
+    })
+
+    it('does not require a TokenCounter — existing behaviour is unchanged', () => {
+      const trace = TraceContext.createTrace('goal')
+      const span = TraceContext.startSpan(trace, { name: 'llm-call' })
+      expect(() =>
+        SpanLifecycle.recordTokenUsage(span, { promptTokens: 50, completionTokens: 25 }),
+      ).not.toThrow()
     })
   })
 })

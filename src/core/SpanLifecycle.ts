@@ -1,4 +1,5 @@
 import type { Span } from './types.js'
+import type { TokenCounter } from '../cost/TokenCounter.js'
 
 export interface TokenUsage {
   promptTokens: number
@@ -21,7 +22,7 @@ export const SpanLifecycle = {
     span.thoughtBlocks.push(thought)
   },
 
-  recordTokenUsage(span: Span, usage: TokenUsage): void {
+  recordTokenUsage(span: Span, usage: TokenUsage, counter?: TokenCounter): void {
     const data: Record<string, unknown> = {
       promptTokens: usage.promptTokens,
       completionTokens: usage.completionTokens,
@@ -31,5 +32,12 @@ export const SpanLifecycle = {
       data['model'] = usage.model
     }
     SpanLifecycle.setMetadata(span, data)
+    if (counter !== undefined && usage.model !== undefined) {
+      counter.record({
+        model: usage.model,
+        promptTokens: usage.promptTokens,
+        completionTokens: usage.completionTokens,
+      })
+    }
   },
 }
