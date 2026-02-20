@@ -175,6 +175,26 @@ Tracer Bullet: single trace POSTed to a mock Tempo OTLP endpoint receives correc
 
 ---
 
+## Phase 8 — HITL Webhook Delivery (PR-08)
+
+**Goal:** CircuitBreaker and LoopDetector signals can be delivered to external systems
+(Slack, PagerDuty, custom handlers) over HTTP without coupling to any specific platform.
+Tracer Bullet: CircuitBreaker `limit-reached` event wired to `WebhookNotifier.send()` delivers
+correct JSON payload to a mock endpoint.
+
+### FB-09 `feat/fb-09-hitl-webhook`
+
+| Commit | File(s) | Description |
+|--------|---------|-------------|
+| `test(notify): WebhookNotifier HTTP delivery + event integration — failing tests` | `src/notify/WebhookNotifier.test.ts` | Failing (mock fetch) |
+| `feat(notify): WebhookNotifier — JSON POST delivery for HITL signals` | `src/notify/WebhookNotifier.ts` | Passing |
+| `chore(notify): wire WebhookNotifier into public API` | `src/index.ts` | Exports |
+
+**Done when:** `WebhookNotifier` tests pass with mock fetch; CircuitBreaker and LoopDetector
+integration patterns verified end-to-end without arbitrary timeouts.
+
+---
+
 ## PR Summary
 
 | PR    | Feature Branches | Scope                                    |
@@ -187,6 +207,7 @@ Tracer Bullet: single trace POSTed to a mock Tempo OTLP endpoint receives correc
 | PR-05 | FB-06           | Incident response (loop detect + interrupt + post-mortem) |
 | PR-06 | FB-07           | External adapters (Langfuse, Prometheus) |
 | PR-07 | FB-08           | Grafana Tempo adapter (OTLP/HTTP)        |
+| PR-08 | FB-09           | HITL webhook delivery                    |
 
 ---
 
@@ -202,5 +223,4 @@ Tracer Bullet: single trace POSTed to a mock Tempo OTLP endpoint receives correc
 
 ## Deferred (Post-v1)
 
-- HITL webhook delivery (currently only fires in-process event)
 - Web UI for trace visualisation
