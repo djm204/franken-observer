@@ -1,7 +1,8 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { TraceContext } from './TraceContext.js'
 import { SpanLifecycle } from './SpanLifecycle.js'
 import { TokenCounter } from '../cost/TokenCounter.js'
+import { LoopDetector } from '../incident/LoopDetector.js'
 
 describe('SpanLifecycle', () => {
   describe('setMetadata()', () => {
@@ -86,6 +87,37 @@ describe('SpanLifecycle', () => {
       expect(() =>
         SpanLifecycle.recordTokenUsage(span, { promptTokens: 50, completionTokens: 25 }),
       ).not.toThrow()
+    })
+  })
+
+  describe('endSpan() + LoopDetector integration', () => {
+    it('calls loopDetector.check() with the span name when provided', () => {
+      const trace = TraceContext.createTrace('goal')
+      const span = TraceContext.startSpan(trace, { name: 'my-step' })
+      const detector = new LoopDetector()
+      const checkSpy = vi.spyOn(detector, 'check')
+      TraceContext.endSpan(span, {}, detector)
+      expect(checkSpy).toHaveBeenCalledWith('my-step')
+    })
+
+    it('works without a LoopDetector — existing behaviour unchanged', () => {
+      const trace = TraceContext.createTrace('goal')
+      const span = TraceContext.startSpan(trace, { name: 'step' })
+      expect(() => TraceContext.endSpan(span)).not.toThrow()
+    })
+
+    it('detects a loop through repeated endSpan calls', () => {
+      const detector = new LoopDetector({ windowSize: 2, repeatThreshold: 2 })
+      const handler = vi.fn()
+      detector.on('loop-detected', handler)
+
+      const trace = TraceContext.createTrace('goal')
+      const names = ['a', 'b', 'a', 'b']
+      for (const name of names) {
+        const span = TraceContext.startSpan(trace, { name })
+        TraceContext.endSpan(span, {}, detector)
+      }
+      expect(handler).toHaveBeenCalledOnce()
     })
   })
 })

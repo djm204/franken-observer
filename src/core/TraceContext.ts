@@ -1,5 +1,6 @@
 import { randomUUID } from 'node:crypto'
 import type { Trace, Span, StartSpanOptions, EndSpanOptions } from './types.js'
+import type { LoopDetector } from '../incident/LoopDetector.js'
 
 export const TraceContext = {
   createTrace(goal: string): Trace {
@@ -30,7 +31,7 @@ export const TraceContext = {
     return span
   },
 
-  endSpan(span: Span, options: EndSpanOptions = {}): void {
+  endSpan(span: Span, options: EndSpanOptions = {}, loopDetector?: LoopDetector): void {
     if (span.status !== 'active') {
       throw new Error(`Cannot end span that is already ${span.status} (id: ${span.id})`)
     }
@@ -40,6 +41,7 @@ export const TraceContext = {
     if (options.errorMessage !== undefined) {
       span.errorMessage = options.errorMessage
     }
+    loopDetector?.check(span.name)
   },
 
   endTrace(trace: Trace): void {
