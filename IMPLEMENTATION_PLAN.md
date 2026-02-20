@@ -301,6 +301,28 @@ compatibility all verified. Injectable `sleep` keeps tests instant — no real t
 | PR-10 | FB-11           | Grafana dashboard JSON generator         |
 | PR-11 | FB-12           | Webhook retry with exponential backoff   |
 | PR-12 | FB-13           | Multi-adapter fan-out                    |
+| PR-13 | FB-14           | Trace sampling                           |
+
+---
+
+## Phase 13 — Trace Sampling (PR-13)
+
+**Goal:** Pluggable `SamplerStrategy` interface with three built-in strategies and a
+`SamplingAdapter` that gates `flush()` behind sampling decisions.
+Tracer Bullet: `SamplingAdapter` with `ProbabilisticSampler(0)` drops all traces;
+`RateLimitedSampler({ maxPerWindow: 2, windowMs: 1000 })` passes only the first
+two flush() calls per window.
+
+### FB-14 `feat/fb-14-trace-sampling`
+
+| Commit | File(s) | Description |
+|--------|---------|-------------|
+| `test(sampling): AlwaysOnSampler, ProbabilisticSampler, RateLimitedSampler, SamplingAdapter — failing tests` | `src/sampling/TraceSampler.test.ts` | Failing |
+| `feat(sampling): trace sampling strategies + SamplingAdapter` | `src/sampling/TraceSampler.ts` | Passing |
+| `chore(sampling): wire sampling into public API` | `src/index.ts` | Exports |
+
+**Done when:** All three strategies' edge cases verified; `SamplingAdapter` confirmed to
+gate flush() correctly; injectable RNG and clock keep tests deterministic. 293 tests, 0 TS errors.
 
 ---
 
