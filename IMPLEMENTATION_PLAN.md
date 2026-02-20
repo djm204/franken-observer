@@ -264,6 +264,49 @@ custom title/uid/tags/datasourceUid options work, output is JSON-serialisable.
 
 ---
 
-## Deferred (Post-v1)
+## Phase 11 — Webhook Retry with Exponential Backoff (PR-11)
 
-- HITL webhook retry with exponential backoff
+**Goal:** `WebhookNotifier` retries transient delivery failures with configurable
+exponential backoff and jitter. Backwards-compatible — existing callers without a
+`retry` option are unaffected.
+Tracer Bullet: `send()` with `maxRetries: 2` invokes fetch 3 times total when the
+first two attempts return 503, then succeeds on the third.
+
+### FB-12 `feat/fb-12-webhook-retry`
+
+| Commit | File(s) | Description |
+|--------|---------|-------------|
+| `test(notify): WebhookNotifier retry with exponential backoff — failing tests` | `src/notify/WebhookNotifier.test.ts` | Failing (extend existing test file) |
+| `feat(notify): WebhookNotifier retry — exponential backoff + jitter` | `src/notify/WebhookNotifier.ts` | Passing |
+
+**Done when:** Retry count, delay doubling, `maxDelayMs` cap, jitter, and backwards
+compatibility all verified. Injectable `sleep` keeps tests instant — no real timers.
+
+---
+
+## PR Summary
+
+| PR    | Feature Branches | Scope                                    |
+|-------|-----------------|------------------------------------------|
+| PR-00 | FB-00           | Project scaffold + CI                    |
+| PR-01 | FB-01           | Core tracing data model + OTEL serialiser|
+| PR-02 | FB-02           | Token counting + cost calc + circuit breaker |
+| PR-03 | FB-03           | OTEL export interface + SQLite adapter   |
+| PR-04 | FB-04 + FB-05   | Eval framework (deterministic + LLM-judge + golden trace) |
+| PR-05 | FB-06           | Incident response (loop detect + interrupt + post-mortem) |
+| PR-06 | FB-07           | External adapters (Langfuse, Prometheus) |
+| PR-07 | FB-08           | Grafana Tempo adapter (OTLP/HTTP)        |
+| PR-08 | FB-09           | HITL webhook delivery                    |
+| PR-09 | FB-10           | Web UI for trace visualisation           |
+| PR-10 | FB-11           | Grafana dashboard JSON generator         |
+| PR-11 | FB-12           | Webhook retry with exponential backoff   |
+
+---
+
+## Definition of Done (per PR)
+
+- [ ] All `*.test.ts` pass: `vitest run`
+- [ ] No TypeScript errors: `tsc --noEmit`
+- [ ] No regressions on previously-merged tests
+- [ ] Tracer bullet path documented in PR description
+- [ ] Public API surface added to `src/index.ts`
