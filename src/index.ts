@@ -23,6 +23,7 @@ export { PrometheusAdapter } from './adapters/prometheus/PrometheusAdapter.js'
 export { TempoAdapter } from './adapters/tempo/TempoAdapter.js'
 export { WebhookNotifier } from './notify/WebhookNotifier.js'
 export { TraceServer } from './ui/TraceServer.js'
+export { generateGrafanaDashboard } from './grafana/GrafanaDashboard.js'
 
 export type { ExportAdapter } from './export/ExportAdapter.js'
 export type { LoopDetectionResult, LoopDetectorOptions } from './incident/LoopDetector.js'
@@ -33,6 +34,15 @@ export type { PrometheusAdapterOptions } from './adapters/prometheus/PrometheusA
 export type { TempoAdapterOptions, TempoBasicAuth } from './adapters/tempo/TempoAdapter.js'
 export type { WebhookNotifierOptions } from './notify/WebhookNotifier.js'
 export type { TraceServerOptions } from './ui/TraceServer.js'
+export type {
+  GrafanaDashboard,
+  GrafanaDashboardOptions,
+  GrafanaPanel,
+  GrafanaTarget,
+  GrafanaGridPos,
+  GrafanaDatasourceRef,
+  GrafanaVariable,
+} from './grafana/GrafanaDashboard.js'
 export type { Eval, EvalResult, EvalStatus } from './evals/types.js'
 export type { ToolCallSchema, ToolCallAccuracyInput } from './evals/deterministic/ToolCallAccuracy.js'
 export type { ADRRule, ArchitecturalAdherenceInput } from './evals/deterministic/ArchitecturalAdherence.js'

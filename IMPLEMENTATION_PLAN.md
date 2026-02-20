@@ -229,6 +229,28 @@ conflicts in CI; `stop()` verified to close the server cleanly.
 | PR-07 | FB-08           | Grafana Tempo adapter (OTLP/HTTP)        |
 | PR-08 | FB-09           | HITL webhook delivery                    |
 | PR-09 | FB-10           | Web UI for trace visualisation           |
+| PR-10 | FB-11           | Grafana dashboard JSON generator         |
+
+---
+
+## Phase 10 — Grafana Dashboard JSON Generator (PR-10)
+
+**Goal:** Pure function `generateGrafanaDashboard()` returns a ready-to-import Grafana
+dashboard JSON with panels for the three PrometheusAdapter metric families.
+Tracer Bullet: calling `generateGrafanaDashboard()` returns an object with `panels`,
+every panel's targets reference a `franken_observer_*` metric, and the output is
+valid JSON (roundtrips through `JSON.parse(JSON.stringify(...))`).
+
+### FB-11 `feat/fb-11-grafana-dashboard`
+
+| Commit | File(s) | Description |
+|--------|---------|-------------|
+| `test(grafana): generateGrafanaDashboard structure and metric coverage — failing tests` | `src/grafana/GrafanaDashboard.test.ts` | Failing |
+| `feat(grafana): generateGrafanaDashboard — 6-panel Prometheus dashboard` | `src/grafana/GrafanaDashboard.ts` | Passing |
+| `chore(grafana): wire generateGrafanaDashboard into public API` | `src/index.ts` | Exports |
+
+**Done when:** All panels present, metric names covered, datasource variable wired,
+custom title/uid/tags/datasourceUid options work, output is JSON-serialisable.
 
 ---
 
@@ -244,5 +266,4 @@ conflicts in CI; `stop()` verified to close the server cleanly.
 
 ## Deferred (Post-v1)
 
-- Grafana dashboard JSON generator (pre-built panel config for import)
 - HITL webhook retry with exponential backoff
