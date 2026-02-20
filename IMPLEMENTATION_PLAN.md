@@ -302,6 +302,29 @@ compatibility all verified. Injectable `sleep` keeps tests instant — no real t
 | PR-11 | FB-12           | Webhook retry with exponential backoff   |
 | PR-12 | FB-13           | Multi-adapter fan-out                    |
 | PR-13 | FB-14           | Trace sampling                           |
+| PR-14 | FB-15           | W3C Trace Context propagation            |
+
+---
+
+## Phase 14 — W3C Trace Context Propagation (PR-14)
+
+**Goal:** Pure utility functions for parsing and formatting W3C `traceparent` and
+`tracestate` headers, plus HTTP helper functions for extracting and injecting
+context across service boundaries.
+Tracer Bullet: `parseTraceparent(header)` returns correct `traceId`/`parentSpanId`/`sampled`
+fields; `formatTraceparent(fields)` roundtrips cleanly; `extractFromHeaders` / `injectIntoHeaders`
+bridge the spec to real HTTP request objects.
+
+### FB-15 `feat/fb-15-trace-context-propagation`
+
+| Commit | File(s) | Description |
+|--------|---------|-------------|
+| `test(propagation): W3C traceparent + tracestate parse/format — failing tests` | `src/propagation/W3CTraceContext.test.ts` | Failing |
+| `feat(propagation): W3CTraceContext — parse, format, extract, inject` | `src/propagation/W3CTraceContext.ts` | Passing |
+| `chore(propagation): wire W3CTraceContext into public API` | `src/index.ts` | Exports |
+
+**Done when:** All edge cases covered (null IDs, all-zeros rejection, future version byte
+acceptance, case-insensitive header extraction, tracestate roundtrip). 337 tests, 0 TS errors.
 
 ---
 

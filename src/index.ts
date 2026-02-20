@@ -11,6 +11,14 @@ export { DEFAULT_PRICING } from './cost/defaultPricing.js'
 export { InMemoryAdapter } from './export/InMemoryAdapter.js'
 export { MultiAdapter } from './adapters/multi/MultiAdapter.js'
 export { AlwaysOnSampler, ProbabilisticSampler, RateLimitedSampler, SamplingAdapter } from './sampling/TraceSampler.js'
+export {
+  parseTraceparent,
+  formatTraceparent,
+  parseTracestate,
+  formatTracestate,
+  extractFromHeaders,
+  injectIntoHeaders,
+} from './propagation/W3CTraceContext.js'
 export { SQLiteAdapter } from './adapters/sqlite/SQLiteAdapter.js'
 export { EvalRunner } from './evals/EvalRunner.js'
 export { ToolCallAccuracyEval } from './evals/deterministic/ToolCallAccuracy.js'
@@ -30,6 +38,7 @@ export { generateGrafanaDashboard } from './grafana/GrafanaDashboard.js'
 export type { ExportAdapter } from './export/ExportAdapter.js'
 export type { MultiAdapterOptions } from './adapters/multi/MultiAdapter.js'
 export type { SamplerStrategy, SamplingAdapterOptions, RateLimitedSamplerOptions } from './sampling/TraceSampler.js'
+export type { TraceparentFields, ExtractedTraceContext } from './propagation/W3CTraceContext.js'
 export type { LoopDetectionResult, LoopDetectorOptions } from './incident/LoopDetector.js'
 export type { InterruptSignal } from './incident/InterruptEmitter.js'
 export type { PostMortemOptions } from './incident/PostMortemGenerator.js'
