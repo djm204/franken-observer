@@ -300,6 +300,29 @@ compatibility all verified. Injectable `sleep` keeps tests instant — no real t
 | PR-09 | FB-10           | Web UI for trace visualisation           |
 | PR-10 | FB-11           | Grafana dashboard JSON generator         |
 | PR-11 | FB-12           | Webhook retry with exponential backoff   |
+| PR-12 | FB-13           | Multi-adapter fan-out                    |
+
+---
+
+## Phase 12 — Multi-Adapter Fan-out (PR-12)
+
+**Goal:** `MultiAdapter` wraps N `ExportAdapter`s and broadcasts every `flush()` call
+to all of them in parallel, enabling simultaneous write to SQLite, Langfuse, and
+Prometheus from a single call site.
+Tracer Bullet: `flush()` with two `InMemoryAdapter`s stores the same trace in both;
+one failing adapter does not prevent the other from receiving the trace.
+
+### FB-13 `feat/fb-13-multi-adapter`
+
+| Commit | File(s) | Description |
+|--------|---------|-------------|
+| `test(adapters): MultiAdapter fan-out — failing tests` | `src/adapters/multi/MultiAdapter.test.ts` | Failing |
+| `feat(adapters): MultiAdapter — parallel flush + first-wins query + union list` | `src/adapters/multi/MultiAdapter.ts` | Passing |
+| `chore(adapters): wire MultiAdapter into public API` | `src/index.ts` | Exports |
+
+**Done when:** flush() allSettled semantics verified (all adapters called even on partial
+failure); `throwOnError: false` best-effort mode; `queryByTraceId` first-wins; `listTraceIds`
+deduplicated union. 274 tests, 0 TS errors.
 
 ---
 
