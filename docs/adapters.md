@@ -135,21 +135,80 @@ adapter.reset() // clear accumulators
 
 ---
 
+## TempoAdapter
+
+Posts OTEL-formatted trace payloads to a [Grafana Tempo](https://grafana.com/oss/tempo/)
+endpoint (local or Grafana Cloud) over OTLP/HTTP. **Write-only** — `queryByTraceId` returns `null`.
+
+```ts
+import { TempoAdapter } from '@frankenbeast/observer'
+
+// Local Tempo / OpenTelemetry Collector (no auth)
+const local = new TempoAdapter({ endpoint: 'http://localhost:4318' })
+await local.flush(trace)
+
+// Grafana Cloud Tempo (Basic auth + cloud OTLP path)
+const cloud = new TempoAdapter({
+  endpoint: 'https://tempo-us-central1.grafana.net/tempo',
+  otlpPath: '/otlp/v1/traces',       // Grafana Cloud uses this path
+  basicAuth: {
+    user: process.env.GRAFANA_INSTANCE_ID!,   // numeric instance ID
+    password: process.env.GRAFANA_API_KEY!,
+  },
+})
+await cloud.flush(trace)
+```
+
+**Options**
+
+| Option      | Type            | Default          | Description                                     |
+|-------------|-----------------|------------------|-------------------------------------------------|
+| `endpoint`  | `string`        | —                | Base URL (trailing slash stripped automatically)|
+| `otlpPath`  | `string`        | `'/v1/traces'`   | OTLP/HTTP path appended to `endpoint`           |
+| `basicAuth` | `TempoBasicAuth`| —                | Omit for unauthenticated local Tempo            |
+| `fetch`     | `FetchFn`       | `globalThis.fetch`| Injectable for testing                         |
+
+**OTLP path quick reference**
+
+| Environment              | `endpoint`                                          | `otlpPath`            |
+|--------------------------|-----------------------------------------------------|-----------------------|
+| Local Tempo / Collector  | `http://localhost:4318`                             | `/v1/traces` (default)|
+| Grafana Cloud            | `https://tempo-{region}.grafana.net/tempo`          | `/otlp/v1/traces`     |
+
+**Testing without a real Tempo instance**
+
+```ts
+import { vi } from 'vitest'
+import { TempoAdapter } from '@frankenbeast/observer'
+
+const mockFetch = vi.fn().mockResolvedValue({ ok: true, status: 200, statusText: 'OK' })
+const adapter   = new TempoAdapter({ endpoint: 'http://localhost:4318', fetch: mockFetch })
+
+await adapter.flush(trace)
+const [url, init] = mockFetch.mock.calls[0]
+// url  → 'http://localhost:4318/v1/traces'
+// init → { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '...' }
+```
+
+---
+
 ## Stacking adapters
 
 You can flush to multiple sinks by calling `flush` on each adapter in parallel:
 
 ```ts
-import { SQLiteAdapter, LangfuseAdapter, PrometheusAdapter } from '@frankenbeast/observer'
+import { SQLiteAdapter, LangfuseAdapter, TempoAdapter, PrometheusAdapter, DEFAULT_PRICING } from '@frankenbeast/observer'
 
 const sqlite    = new SQLiteAdapter('./traces.db')
 const langfuse  = new LangfuseAdapter({ publicKey: '…', secretKey: '…' })
+const tempo     = new TempoAdapter({ endpoint: 'http://localhost:4318' })
 const prom      = new PrometheusAdapter({ pricingTable: DEFAULT_PRICING })
 
 async function exportTrace(trace: Trace) {
   await Promise.all([
     sqlite.flush(trace),
     langfuse.flush(trace),
+    tempo.flush(trace),
     prom.flush(trace),
   ])
 }

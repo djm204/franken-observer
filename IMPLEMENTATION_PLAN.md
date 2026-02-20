@@ -157,6 +157,24 @@ Tracer Bullet: single trace POSTed to a mock Langfuse server receives correct OT
 
 ---
 
+## Phase 7 — Grafana Tempo Adapter (PR-07)
+
+**Goal:** Export OTEL traces to Grafana Tempo (local or Grafana Cloud) over OTLP/HTTP.
+Tracer Bullet: single trace POSTed to a mock Tempo OTLP endpoint receives correct OTEL payload + Basic auth header.
+
+### FB-08 `feat/fb-08-tempo-adapter`
+
+| Commit | File(s) | Description |
+|--------|---------|-------------|
+| `test(adapters): TempoAdapter OTLP/HTTP trace export — failing tests` | `src/adapters/tempo/TempoAdapter.test.ts` | Failing (mock fetch) |
+| `feat(adapters): TempoAdapter — OTLP/HTTP export to Grafana Tempo` | `src/adapters/tempo/TempoAdapter.ts` | Passing |
+| `chore(adapters): wire TempoAdapter into public API` | `src/index.ts` | Exports |
+| `docs(adapters): add TempoAdapter to adapter guide` | `docs/adapters.md` | Usage examples |
+
+**Done when:** `TempoAdapter` tests pass with mock fetch; both Grafana Cloud (Basic auth) and unauthenticated local Tempo patterns covered.
+
+---
+
 ## PR Summary
 
 | PR    | Feature Branches | Scope                                    |
@@ -168,6 +186,7 @@ Tracer Bullet: single trace POSTed to a mock Langfuse server receives correct OT
 | PR-04 | FB-04 + FB-05   | Eval framework (deterministic + LLM-judge + golden trace) |
 | PR-05 | FB-06           | Incident response (loop detect + interrupt + post-mortem) |
 | PR-06 | FB-07           | External adapters (Langfuse, Prometheus) |
+| PR-07 | FB-08           | Grafana Tempo adapter (OTLP/HTTP)        |
 
 ---
 
@@ -183,7 +202,5 @@ Tracer Bullet: single trace POSTed to a mock Langfuse server receives correct OT
 
 ## Deferred (Post-v1)
 
-- Phoenix adapter (similar to Langfuse, lower priority)
-- Grafana dashboard JSON export
 - HITL webhook delivery (currently only fires in-process event)
 - Web UI for trace visualisation
