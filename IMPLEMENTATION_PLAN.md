@@ -195,6 +195,26 @@ integration patterns verified end-to-end without arbitrary timeouts.
 
 ---
 
+## Phase 9 — Web UI for Trace Visualisation (PR-09)
+
+**Goal:** Lightweight local HTTP server (Node built-ins only) serving a single-page
+trace viewer — trace list, span table, token/model columns.
+Tracer Bullet: `TraceServer.start()` binds, `GET /api/traces` returns summaries,
+`GET /api/traces/:id` returns full trace, `GET /` returns self-contained HTML.
+
+### FB-10 `feat/fb-10-trace-server-ui`
+
+| Commit | File(s) | Description |
+|--------|---------|-------------|
+| `test(ui): TraceServer HTTP routes and HTML page — failing tests` | `src/ui/TraceServer.test.ts` | Failing (real HTTP, port 0) |
+| `feat(ui): TraceServer — local HTTP trace viewer` | `src/ui/TraceServer.ts` | Passing |
+| `chore(ui): wire TraceServer into public API` | `src/index.ts` | Exports |
+
+**Done when:** All routes tested with real HTTP (no mocking); `port: 0` ensures no port
+conflicts in CI; `stop()` verified to close the server cleanly.
+
+---
+
 ## PR Summary
 
 | PR    | Feature Branches | Scope                                    |
@@ -208,6 +228,7 @@ integration patterns verified end-to-end without arbitrary timeouts.
 | PR-06 | FB-07           | External adapters (Langfuse, Prometheus) |
 | PR-07 | FB-08           | Grafana Tempo adapter (OTLP/HTTP)        |
 | PR-08 | FB-09           | HITL webhook delivery                    |
+| PR-09 | FB-10           | Web UI for trace visualisation           |
 
 ---
 
@@ -223,4 +244,5 @@ integration patterns verified end-to-end without arbitrary timeouts.
 
 ## Deferred (Post-v1)
 
-- Web UI for trace visualisation
+- Grafana dashboard JSON generator (pre-built panel config for import)
+- HITL webhook retry with exponential backoff
