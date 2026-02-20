@@ -131,6 +131,130 @@ describe('WebhookNotifier', () => {
     })
   })
 
+  describe('retry with exponential backoff', () => {
+    it('succeeds without retrying when first attempt is ok', async () => {
+      const notifier = new WebhookNotifier({
+        url: 'https://hooks.example.com/signal',
+        fetch: mockFetch,
+        retry: { maxRetries: 2 },
+        sleep: vi.fn().mockResolvedValue(undefined),
+      })
+      await notifier.send({ type: 'test' })
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
+
+    it('retries after a non-ok response and succeeds on the second attempt', async () => {
+      mockFetch
+        .mockResolvedValueOnce({ ok: false, status: 503, statusText: 'Service Unavailable' })
+        .mockResolvedValueOnce({ ok: true, status: 200, statusText: 'OK' })
+      const sleepFn = vi.fn().mockResolvedValue(undefined)
+      const notifier = new WebhookNotifier({
+        url: 'https://hooks.example.com/signal',
+        fetch: mockFetch,
+        retry: { maxRetries: 3 },
+        sleep: sleepFn,
+      })
+      await notifier.send({ type: 'test' })
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+      expect(sleepFn).toHaveBeenCalledTimes(1)
+    })
+
+    it('throws after exhausting all retries', async () => {
+      mockFetch.mockResolvedValue({ ok: false, status: 503, statusText: 'Service Unavailable' })
+      const notifier = new WebhookNotifier({
+        url: 'https://hooks.example.com/signal',
+        fetch: mockFetch,
+        retry: { maxRetries: 2 },
+        sleep: vi.fn().mockResolvedValue(undefined),
+      })
+      await expect(notifier.send({ type: 'test' })).rejects.toThrow('503')
+      expect(mockFetch).toHaveBeenCalledTimes(3) // initial + 2 retries
+    })
+
+    it('doubles the delay on each retry (exponential backoff)', async () => {
+      mockFetch.mockResolvedValue({ ok: false, status: 503, statusText: 'Service Unavailable' })
+      const sleepFn = vi.fn().mockResolvedValue(undefined)
+      const notifier = new WebhookNotifier({
+        url: 'https://hooks.example.com/signal',
+        fetch: mockFetch,
+        retry: { maxRetries: 3, baseDelayMs: 100, jitter: false },
+        sleep: sleepFn,
+      })
+      await expect(notifier.send({ type: 'test' })).rejects.toThrow()
+      const delays = sleepFn.mock.calls.map(args => args[0] as number)
+      expect(delays[0]).toBe(100)  // 100 * 2^0
+      expect(delays[1]).toBe(200)  // 100 * 2^1
+      expect(delays[2]).toBe(400)  // 100 * 2^2
+    })
+
+    it('caps delay at maxDelayMs', async () => {
+      mockFetch.mockResolvedValue({ ok: false, status: 503, statusText: 'Service Unavailable' })
+      const sleepFn = vi.fn().mockResolvedValue(undefined)
+      const notifier = new WebhookNotifier({
+        url: 'https://hooks.example.com/signal',
+        fetch: mockFetch,
+        retry: { maxRetries: 4, baseDelayMs: 100, maxDelayMs: 250, jitter: false },
+        sleep: sleepFn,
+      })
+      await expect(notifier.send({ type: 'test' })).rejects.toThrow()
+      const delays = sleepFn.mock.calls.map(args => args[0] as number)
+      expect(delays[0]).toBe(100)
+      expect(delays[1]).toBe(200)
+      expect(delays[2]).toBe(250) // capped
+      expect(delays[3]).toBe(250) // capped
+    })
+
+    it('retries on network errors (fetch rejection)', async () => {
+      mockFetch
+        .mockRejectedValueOnce(new Error('ECONNREFUSED'))
+        .mockResolvedValueOnce({ ok: true, status: 200, statusText: 'OK' })
+      const notifier = new WebhookNotifier({
+        url: 'https://hooks.example.com/signal',
+        fetch: mockFetch,
+        retry: { maxRetries: 2 },
+        sleep: vi.fn().mockResolvedValue(undefined),
+      })
+      await notifier.send({ type: 'test' })
+      expect(mockFetch).toHaveBeenCalledTimes(2)
+    })
+
+    it('throws the last network error after exhausting retries', async () => {
+      mockFetch.mockRejectedValue(new Error('ECONNREFUSED'))
+      const notifier = new WebhookNotifier({
+        url: 'https://hooks.example.com/signal',
+        fetch: mockFetch,
+        retry: { maxRetries: 1 },
+        sleep: vi.fn().mockResolvedValue(undefined),
+      })
+      await expect(notifier.send({ type: 'test' })).rejects.toThrow('ECONNREFUSED')
+    })
+
+    it('is backwards-compatible: no retry option means single attempt', async () => {
+      mockFetch.mockResolvedValue({ ok: false, status: 500, statusText: 'Internal Server Error' })
+      const notifier = new WebhookNotifier({ url: 'https://hooks.example.com/signal', fetch: mockFetch })
+      await expect(notifier.send({ type: 'test' })).rejects.toThrow('500')
+      expect(mockFetch).toHaveBeenCalledTimes(1)
+    })
+
+    it('adds jitter (delay is not exactly baseDelayMs * 2^i)', async () => {
+      mockFetch.mockResolvedValue({ ok: false, status: 503, statusText: 'Service Unavailable' })
+      const sleepFn = vi.fn().mockResolvedValue(undefined)
+      const notifier = new WebhookNotifier({
+        url: 'https://hooks.example.com/signal',
+        fetch: mockFetch,
+        retry: { maxRetries: 2, baseDelayMs: 100, jitter: true },
+        sleep: sleepFn,
+      })
+      await expect(notifier.send({ type: 'test' })).rejects.toThrow()
+      const delays = sleepFn.mock.calls.map(args => args[0] as number)
+      // With jitter each delay is base*2^i + random(0..base), so >= base*2^i and < 2*base*2^i
+      expect(delays[0]).toBeGreaterThanOrEqual(100)
+      expect(delays[0]).toBeLessThan(200)
+      expect(delays[1]).toBeGreaterThanOrEqual(200)
+      expect(delays[1]).toBeLessThan(400)
+    })
+  })
+
   describe('integration with LoopDetector', () => {
     it('delivers a loop-detected payload via fire-and-forget wiring', async () => {
       let resolveOnDelivery!: () => void

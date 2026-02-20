@@ -32,7 +32,7 @@ export type { PostMortemOptions } from './incident/PostMortemGenerator.js'
 export type { LangfuseAdapterOptions, FetchFn } from './adapters/langfuse/LangfuseAdapter.js'
 export type { PrometheusAdapterOptions } from './adapters/prometheus/PrometheusAdapter.js'
 export type { TempoAdapterOptions, TempoBasicAuth } from './adapters/tempo/TempoAdapter.js'
-export type { WebhookNotifierOptions } from './notify/WebhookNotifier.js'
+export type { WebhookNotifierOptions, WebhookRetryOptions } from './notify/WebhookNotifier.js'
 export type { TraceServerOptions } from './ui/TraceServer.js'
 export type {
   GrafanaDashboard,
