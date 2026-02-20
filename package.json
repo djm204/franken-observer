@@ -13,7 +13,9 @@
       "require": "./dist/index.cjs"
     }
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
@@ -23,9 +25,13 @@
     "test:eval": "EVAL=true vitest run --reporter=verbose"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.14.0",
     "tsup": "^8.1.0",
     "typescript": "^5.5.0",
     "vitest": "^3.0.0"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.6.2"
   }
 }
