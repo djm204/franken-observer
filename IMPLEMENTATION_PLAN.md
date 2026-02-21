@@ -304,6 +304,28 @@ compatibility all verified. Injectable `sleep` keeps tests instant — no real t
 | PR-13 | FB-14           | Trace sampling                           |
 | PR-14 | FB-15           | W3C Trace Context propagation            |
 | PR-15 | FB-16           | Span redaction middleware                |
+| PR-16 | FB-17           | Batched export adapter                   |
+
+---
+
+## Phase 16 — Batched Export Adapter (PR-16)
+
+**Goal:** `BatchAdapter` buffers `flush()` calls and forwards them to the inner
+adapter in bulk, reducing HTTP round-trips for high-throughput agent workloads.
+Tracer Bullet: with `maxBatchSize: 3`, two `flush()` calls leave the inner adapter
+empty; the third triggers a drain and all three traces appear in the inner adapter.
+
+### FB-17 `feat/fb-17-batch-adapter`
+
+| Commit | File(s) | Description |
+|--------|---------|-------------|
+| `test(adapters): BatchAdapter buffering, drain, stop, query — failing tests` | `src/adapters/batch/BatchAdapter.test.ts` | Failing |
+| `feat(adapters): BatchAdapter — size-triggered + timer-triggered bulk drain` | `src/adapters/batch/BatchAdapter.ts` | Passing |
+| `chore(adapters): wire BatchAdapter into public API` | `src/index.ts` | Exports |
+
+**Done when:** Size trigger, manual drain(), stop() with timer cancellation, buffer-aware
+queryByTraceId and listTraceIds all verified. Injectable setInterval/clearInterval keeps
+timer tests deterministic. 373 tests, 0 TS errors.
 
 ---
 
