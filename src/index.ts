@@ -11,6 +11,7 @@ export { DEFAULT_PRICING } from './cost/defaultPricing.js'
 export { InMemoryAdapter } from './export/InMemoryAdapter.js'
 export { MultiAdapter } from './adapters/multi/MultiAdapter.js'
 export { AlwaysOnSampler, ProbabilisticSampler, RateLimitedSampler, SamplingAdapter } from './sampling/TraceSampler.js'
+export { SpanRedactor } from './redaction/SpanRedactor.js'
 export {
   parseTraceparent,
   formatTraceparent,
@@ -39,6 +40,7 @@ export type { ExportAdapter } from './export/ExportAdapter.js'
 export type { MultiAdapterOptions } from './adapters/multi/MultiAdapter.js'
 export type { SamplerStrategy, SamplingAdapterOptions, RateLimitedSamplerOptions } from './sampling/TraceSampler.js'
 export type { TraceparentFields, ExtractedTraceContext } from './propagation/W3CTraceContext.js'
+export type { RedactionAction, RedactionRule, SpanRedactorOptions } from './redaction/SpanRedactor.js'
 export type { LoopDetectionResult, LoopDetectorOptions } from './incident/LoopDetector.js'
 export type { InterruptSignal } from './incident/InterruptEmitter.js'
 export type { PostMortemOptions } from './incident/PostMortemGenerator.js'

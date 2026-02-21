@@ -303,6 +303,30 @@ compatibility all verified. Injectable `sleep` keeps tests instant — no real t
 | PR-12 | FB-13           | Multi-adapter fan-out                    |
 | PR-13 | FB-14           | Trace sampling                           |
 | PR-14 | FB-15           | W3C Trace Context propagation            |
+| PR-15 | FB-16           | Span redaction middleware                |
+
+---
+
+## Phase 15 — Span Redaction Middleware (PR-15)
+
+**Goal:** `SpanRedactor` wraps any `ExportAdapter` and strips or masks sensitive
+span metadata fields (PII, secrets, tool outputs) before the trace reaches
+downstream backends. The original trace is never mutated.
+Tracer Bullet: `SpanRedactor` with `{ key: /^api_/, action: 'remove' }` drops all
+`api_*` metadata keys from every span; the underlying adapter receives the
+scrubbed copy while the caller's trace object is unchanged.
+
+### FB-16 `feat/fb-16-span-redactor`
+
+| Commit | File(s) | Description |
+|--------|---------|-------------|
+| `test(redaction): SpanRedactor metadata rules, thoughtBlocks, immutability — failing tests` | `src/redaction/SpanRedactor.test.ts` | Failing |
+| `feat(redaction): SpanRedactor — remove/mask rules + thoughtBlocks wipe` | `src/redaction/SpanRedactor.ts` | Passing |
+| `chore(redaction): wire SpanRedactor into public API` | `src/index.ts` | Exports |
+
+**Done when:** Exact-string and RegExp key rules verified; `maskWith` customisation;
+immutability confirmed; `redactThoughtBlocks` clears all thought blocks;
+delegation to underlying adapter unchanged. 353 tests, 0 TS errors.
 
 ---
 
