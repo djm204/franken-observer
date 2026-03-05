@@ -19,4 +19,6 @@ export const DEFAULT_PRICING: PricingTable = {
   // OpenAI
   'gpt-4o': { promptPerMillion: 5.0, completionPerMillion: 15.0 },
   'gpt-4o-mini': { promptPerMillion: 0.15, completionPerMillion: 0.6 },
+  // Codex CLI (override if your billing differs)
+  'codex': { promptPerMillion: 5.0, completionPerMillion: 15.0 },
 }
